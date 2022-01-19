@@ -8,6 +8,9 @@ import copy
 # to process image/images in order to filter out features
 # also a place for categorizing the images
 
+CV_IMSHOW_TIME = 1 # 0 to wait for key press after image cycle
+
+# class for all stuff related to Gate detection
 class GateDetect:
     
     def __init__(self,
@@ -16,27 +19,31 @@ class GateDetect:
                 ncluster = 5,
                 color_threshold_prep = 30):
         self.img_prep = image_prep.ImagePrep()
+        # update parameters
         self.img_prep.updateDimension(img_dim=img_dim,block_dim=block_dim)
         self.img_prep.k_kmean = ncluster
         self.img_prep.dist_thres_color_diff = color_threshold_prep
+        # generate block array
         self.createBlocks()
         self.contour_flags = {"total_contours":0, "circle":[], "line":[]}
         self.color_flags = {"furthest_distance":0,"background":True}
 
-    # create a 2d list of block objects
+    # create a 2d list of block objects, each relates to the property of an image slice
     def createBlocks(self):
         x,y = self.img_prep.num_seg
         temp = []
         for i in range(y):
             temp.append([image_util.Block(pos = (i,j)) for j in range(x)])
         self.block_list = np.array(temp)
-    # create image from blocks' max value
+
+    # create image from block array's max value
     def block2ImgByMaxVal(self):
         img = np.zeros(self.block_list.shape,dtype=np.uint8)
         for i,block_row in enumerate(self.block_list):
             for j,block in enumerate(block_row):
                 img[i][j] = block.max_color
         return img
+
     # assign color flags to img after kmean
     def kmeanColor(self,colors,color_thres = 50):
         flags = self.color_flags
@@ -76,6 +83,7 @@ class GateDetect:
                 full_list.append(col)
             full = self.img_prep.combineRow(full_list)
         return full
+    
     # blur -> kmeans -> filter: color_label -> contours 
     def maskImgBlock(self,block,color_thres = 50):
         blur = self.img_prep.blur(block, is_list=False)
@@ -89,8 +97,9 @@ class GateDetect:
             block = np.full(block.shape,32*2,dtype="uint8")
             contoured = self.img_prep.drawContour(block, contours, random_color=False)
             cv2.imshow('block',contoured)
-            cv2.waitKey(0)
+            cv2.waitKey(CV_IMSHOW_TIME)
         return block
+    
     # slice -> blur -> k-mean -> combine
     def wholeImgProcess(self,img):
         sliced_blocks = self.img_prep.slice(img)
@@ -125,6 +134,7 @@ if __name__ == '__main__':
             cv2.imshow('hsv',HSVFrame)
             begin_time = time.perf_counter()
             HSVFrame1 = copy.deepcopy(HSVFrame)
+
             #whole_img_process = img_process.wholeImgProcess(frame)
             mask1_img = img_process.maskImg(HSVFrame,50,0)
             #mask2_img = img_process.maskImg(HSVFrame,50,1)

@@ -31,4 +31,4 @@ class Block:
         self.total_energy = np.sum(img)
     def findMax(self,img):
         self.max_color = np.amax(img)
-        print(self.max_color)
+        #print(self.max_color)
