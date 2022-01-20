@@ -1,6 +1,9 @@
 this is the OpenCV code I started over the break attempting to better analyze videos. Focus on analyzing gate video in the NCSU pool setting.
 
 ## How to interpret the images  
+
+Running the image_process.py
+
 You will find a grayscale image made with completely black squares, some gray squares with highlighted edges of 2 colors. The brighter colored edge are filtered with certain parameters. This image is used to tell how and where it has been processed.
 
 You will also find an 10x10 (or much smaller) image that is made from the brightest pixel in each square of the image described above. This image is used can be interpreted as a 2d array of different states (or also priority of each image region) avaliable for filtering.  
