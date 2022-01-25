@@ -7,8 +7,8 @@ import copy
 # This file intends to apply the utilities provided in image_prep.py
 # to process image/images in order to filter out features
 # also a place for categorizing the images
-
-CV_IMSHOW_TIME = 1 # 0 to wait for key press after image cycle
+DEBUG_LOG = True
+CV_IMSHOW_TIME = 0 # 0 to wait for key press after image cycle
 
 # class for all stuff related to Gate detection
 class GateDetect:
@@ -86,6 +86,8 @@ class GateDetect:
     
     # blur -> kmeans -> filter: color_label -> contours 
     def maskImgBlock(self,block,color_thres = 50):
+        if DEBUG_LOG:
+            print("-----new block-----")
         blur = self.img_prep.blur(block, is_list=False)
         label,center = self.img_prep.kmeans(block)
         color_flag = self.kmeanColor(center,color_thres)
@@ -94,7 +96,7 @@ class GateDetect:
         else:
             block = self.img_prep.drawKmeans(label,center,block.shape)
             contours,hierarchy = self.img_prep.contour(block)
-            block = np.full(block.shape,32*2,dtype="uint8")
+            block = np.full(block.shape,8,dtype="uint8")
             contoured = self.img_prep.drawContour(block, contours, random_color=False)
             cv2.imshow('block',contoured)
             cv2.waitKey(CV_IMSHOW_TIME)

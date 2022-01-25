@@ -1,13 +1,12 @@
+from pickle import TRUE
 import cv2
 import numpy as np
 import random
 import time
 
-#from numpy import linalg
-
 # This file provides some utilities needed to process an image
 # before labelling the features
-
+DEBUG_LOG = True
 class ImagePrep:
     ### Below are parameters that may be necessary to change 
     ### to suit for creating images best for labelling
@@ -212,16 +211,20 @@ class ImagePrep:
 
     # determine a custom color for filtered contours
     def contourColor(self,contour):
-        gray_scale = 64*2
-        color = (gray_scale,gray_scale,gray_scale) # black
         [rot_rect, up_rect, area] = self.contourProperty(contour)
         angle = abs(rot_rect[2]) % 90 
+        if DEBUG_LOG:
+            print("up_rect (x,y,w,h): ", up_rect, "area: ", area)
+        
+        gray_scale = 32*(1+area)
+        color = (gray_scale,gray_scale,gray_scale) # black
         # filters
         if ( # check dimension of the bounding box based on block dimension
              any(size >= self.block_dim_slice / 1 for size in up_rect[2:])  
              and area < 5 
              and (angle < 20 or angle > 70) ):
             color = (255,255,255) # white
+        print(color)
         return color
 
 if __name__ == '__main__':
