@@ -1,4 +1,5 @@
 import cv2
+from cv2 import contourArea
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -49,7 +50,7 @@ class ColorAssignment:
     # channel 3 is used to represent the special locations
     #       strength is decided by location of contour
     #           in theory, all contour of gate should touch the edge of block
-    def generateColors(contour):
+    def generateColors(self,contour):
         # receive all contours and the image size
         # returns corresponding colors
 
@@ -61,25 +62,33 @@ class ColorAssignment:
         # append the color
         # loop 
         # return colors
+        self.contourProperty(contour)
         pass
-    def cleanEdgeSignal(self,contour):
+    def cleanEdgeSignal(self, contour, image_size):
         # find angle, bounding rectangle, area
         # assign whether this contour is a clean edge
-        rot_rect, up_rect, area = self.contourProperty(contour)
-        
-        pass
+        angle = abs(self.rot_rect[2]) % 90
+        if (self.area < 5 and (angle < 20 or angle > 70)
+            and any(size >= image_size for size in self.up_rect[2:])):
+            return True
+        return False
+
     def noiseMultiplier(contours, image_size):
         # find # of contours, area of all contours in relation to image size
         # 
+
         pass
-    def touchingBounds(contour_box, image_size):
+    def touchingBounds(self, contour, image_size):
         # find if the contour touches the image edge
         # contour_box is the bounding box (x,y,w,h)
         # check if x,y == 0, check if x+w,y+h = image_size
-        pass
+        x,y,w,h = self.upright_rect
+        if ((x == 0 or y == 0)
+            or (x+w == image_size or y+h == image_size)):
+            return True
+        return False
 
     def contourProperty(self,contour):
-        rot_rect = cv2.minAreaRect(contour)
-        upright_rect = cv2.boundingRect(contour)
-        area = cv2.contourArea(contour)
-        return [rot_rect, upright_rect, area]
+        self.rot_rect = cv2.minAreaRect(contour)
+        self.upright_rect = cv2.boundingRect(contour)
+        self.area = cv2.contourArea(contour)
