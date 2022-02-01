@@ -1,4 +1,3 @@
-from pickle import TRUE
 import cv2
 import numpy as np
 import random
@@ -207,16 +206,16 @@ class ImagePrep:
         rot_rect = cv2.minAreaRect(contour)
         upright_rect = cv2.boundingRect(contour)
         area = cv2.contourArea(contour)
-        return [rot_rect, upright_rect, area]
+        return rot_rect, upright_rect, area
 
     # determine a custom color for filtered contours
     def contourColor(self,contour):
-        [rot_rect, up_rect, area] = self.contourProperty(contour)
+        rot_rect, up_rect, area = self.contourProperty(contour)
         angle = abs(rot_rect[2]) % 90 
         if DEBUG_LOG:
             print("up_rect (x,y,w,h): ", up_rect, "area: ", area)
         
-        gray_scale = 32*(1+area)
+        gray_scale = 32*(4)
         color = (gray_scale,gray_scale,gray_scale) # black
         # filters
         if ( # check dimension of the bounding box based on block dimension

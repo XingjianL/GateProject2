@@ -115,6 +115,29 @@ class GateDetect:
         full = self.img_prep.combineCol(rows)
         return full
 
+    # return gate center by using max contour values along axis
+    def findByMaximum(self,img):
+        total_energy = self.sumOfAxis(img, axis = 0)
+        sort_index = np.argsort(total_energy)
+        check_index = np.flip(sort_index[-22:])
+        
+        width_filter = 10
+        center = -1
+        saved_i = check_index[0]
+        for i in check_index:
+            if(abs(i-saved_i) > width_filter):
+                center = (i + saved_i)/2
+                break
+            if(DEBUG_LOG):
+                print(i, " ", total_energy[i])
+
+        return int(center)
+
+    def sumOfAxis(self, img, axis=0):
+        first_channel = img[:,:,0]
+        total_energy = np.sum(first_channel,axis=axis)
+        
+        return total_energy
 if __name__ == '__main__':
     plotter = image_util.PlottingUtils()
     img_prep_m = image_prep.ImagePrep()
@@ -142,8 +165,14 @@ if __name__ == '__main__':
             #mask2_img = img_process.maskImg(HSVFrame,50,1)
             #mask3_img = img_process.maskImg(HSVFrame,50,2)
             #mask2_img = img_process_2.maskImg(HSVFrame1,50,0)
-
+            gate_location = img_process.findByMaximum(mask1_img)
+            print("--------------- ", gate_location)
             end_time = time.perf_counter()
+            
+            vert_center = int(mask1_img.shape[1] / 2)
+            hori_center = int(mask1_img.shape[0] / 2)
+            cv2.circle(mask1_img,(gate_location,hori_center),5,(0,0,255))
+            cv2.circle(mask1_img,(vert_center,hori_center),3,(255,0,0))
             cv2.imshow('mask1',mask1_img)
 
             simple_img = img_process.block2ImgByMaxVal()
