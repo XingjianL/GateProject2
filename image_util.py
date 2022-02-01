@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+import image_prep
+
 class PlottingUtils:
     plt.figure()
     plt.ion()
@@ -60,9 +62,11 @@ class ColorAssignment:
         # loop 
         # return colors
         pass
-    def cleanEdgeSignal(contour):
+    def cleanEdgeSignal(self,contour):
         # find angle, bounding rectangle, area
         # assign whether this contour is a clean edge
+        rot_rect, up_rect, area = self.contourProperty(contour)
+        
         pass
     def noiseMultiplier(contours, image_size):
         # find # of contours, area of all contours in relation to image size
@@ -73,3 +77,9 @@ class ColorAssignment:
         # contour_box is the bounding box (x,y,w,h)
         # check if x,y == 0, check if x+w,y+h = image_size
         pass
+
+    def contourProperty(self,contour):
+        rot_rect = cv2.minAreaRect(contour)
+        upright_rect = cv2.boundingRect(contour)
+        area = cv2.contourArea(contour)
+        return [rot_rect, upright_rect, area]
