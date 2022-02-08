@@ -25,7 +25,7 @@ class GateDetect:
         self.img_prep.dist_thres_color_diff = color_threshold_prep
         # generate block array
         self.createBlocks()
-        self.contour_flags = {"total_contours":0, "circle":[], "line":[]}
+        self.contour_flags = {"total_contours":0, "circle":[], "line":[], "background":True}
         self.color_flags = {"furthest_distance":0,"background":True}
 
     # create a 2d list of block objects, each relates to the property of an image slice
@@ -53,7 +53,14 @@ class GateDetect:
         else:
             flags["background"] = False
         return flags
-    
+    def contourFlag(self,contours,contour_count = 1):
+        flags = self.contour_flags
+        flags["total_contours"] = len(contours)
+        if flags["total_contours"] < contour_count:
+            flags["background"] = True
+        else:
+            flags["background"] = False
+        return flags
     # mask the image based on flags 
     # process see maskImgBlock()
     # axis: 0-individual block, 1-row, 2-col
@@ -101,7 +108,26 @@ class GateDetect:
             cv2.imshow('block',contoured)
             cv2.waitKey(CV_IMSHOW_TIME)
         return block
-    
+
+    # slice -> contour
+    def contourImg(self, img):
+        sliced_blocks = self.img_prep.slice(img)
+        full_list = []
+        for i,row in enumerate(sliced_blocks):
+            block_list = []
+            for j,block in enumerate(row):
+                contours,hierarchy = self.img_prep.contour(block)
+                contour_flag = self.contourFlag(contours)
+                if contour_flag["background"] is False:
+                    block = np.full(block.shape,128,dtype="uint8")
+                else:
+                    block = np.full(block.shape,0,dtype="uint8")
+                self.img_prep.drawContour(block, contours, random_color=True)
+                block_list.append(block)
+            full_list.append(self.img_prep.combineRow(block_list))
+        full = self.img_prep.combineCol(full_list)
+        return full
+
     # slice -> blur -> k-mean -> combine
     def wholeImgProcess(self,img):
         sliced_blocks = self.img_prep.slice(img)
@@ -141,13 +167,13 @@ class GateDetect:
 if __name__ == '__main__':
     plotter = image_util.PlottingUtils()
     img_prep_m = image_prep.ImagePrep()
-    img_process = GateDetect(block_dim = 21)
-    #img_process_2 = GateDetect(block_dim = 11)
+    ncsu_img_process = GateDetect(block_dim = 21)
+    murky_img_process = GateDetect(block_dim = 21)
 
     ##############
     # Video file #
     ##############
-    vid = cv2.VideoCapture('/home/xing/TesterCodes/OpenCV/GateProject/move_towards.avi')
+    vid = cv2.VideoCapture('/home/xing/TesterCodes/OpenCV/GateProject/GateCcomp.mp4')
     
     total_frames = 0
     time_used = []
@@ -160,12 +186,14 @@ if __name__ == '__main__':
             begin_time = time.perf_counter()
             HSVFrame1 = copy.deepcopy(HSVFrame)
 
-            #whole_img_process = img_process.wholeImgProcess(frame)
-            mask1_img = img_process.maskImg(HSVFrame,50,0)
-            #mask2_img = img_process.maskImg(HSVFrame,50,1)
-            #mask3_img = img_process.maskImg(HSVFrame,50,2)
-            #mask2_img = img_process_2.maskImg(HSVFrame1,50,0)
-            gate_location = img_process.findByMaximum(mask1_img)
+            whole_img_process = murky_img_process.wholeImgProcess(frame)
+            
+            # murky (competition) pool config
+            mask1_img = murky_img_process.contourImg(frame)
+            # NCSU pool config
+            #mask1_img = img_process.maskImg(HSVFrame,50,0)
+
+            gate_location = murky_img_process.findByMaximum(mask1_img)
             print("--------------- ", gate_location)
             end_time = time.perf_counter()
             
@@ -175,7 +203,7 @@ if __name__ == '__main__':
             cv2.circle(mask1_img,(vert_center,hori_center),3,(255,0,0))
             cv2.imshow('mask1',mask1_img)
 
-            simple_img = img_process.block2ImgByMaxVal()
+            simple_img = murky_img_process.block2ImgByMaxVal()
             cv2.imshow('simple_img',simple_img)
 
             plotter.clearfig()
@@ -184,7 +212,7 @@ if __name__ == '__main__':
 
             #cv2.imshow('mask2',mask2_img)
             #cv2.imshow('mask3',mask3_img)
-            #cv2.imshow('full_process2',whole_img_process1)
+            cv2.imshow('full_process2',whole_img_process)
             #cv2.imshow('full_process3',whole_img_process2)
             cv2.waitKey(1)
             total_frames += 1
