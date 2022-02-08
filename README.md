@@ -2,7 +2,7 @@ this is the OpenCV code I started over the break attempting to better analyze vi
 
 ## How to interpret the images  
 
-Running the image_process.py
+Run the image_process.py
 
 You will find a grayscale image made with completely black squares, some gray squares with highlighted edges of 2 colors. The brighter colored edge are filtered with certain parameters. This image is used to tell how and where it has been processed.
 
