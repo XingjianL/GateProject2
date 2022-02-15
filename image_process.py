@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from numpy.core.shape_base import block
 import image_prep, image_util
 import time
 import copy
@@ -64,7 +63,7 @@ class GateDetect:
     # mask the image based on flags 
     # process see maskImgBlock()
     # axis: 0-individual block, 1-row, 2-col
-    def maskImg(self,img,color_thres = 50,axis=1):
+    def maskImg(self,img,color_thres = 50,axis=0):
         sliced_blocks = self.img_prep.slice(img)
         full_list = []
         if axis == 0:
@@ -119,7 +118,7 @@ class GateDetect:
                 contours,hierarchy = self.img_prep.contour(block)
                 contour_flag = self.contourFlag(contours)
                 if contour_flag["background"] is False:
-                    block = np.full(block.shape,128,dtype="uint8")
+                    block = np.full(block.shape,32,dtype="uint8")
                 else:
                     block = np.full(block.shape,0,dtype="uint8")
                 self.img_prep.drawContour(block, contours, random_color=True)
@@ -168,12 +167,12 @@ if __name__ == '__main__':
     plotter = image_util.PlottingUtils()
     img_prep_m = image_prep.ImagePrep()
     ncsu_img_process = GateDetect(block_dim = 21)
-    murky_img_process = GateDetect(block_dim = 21)
+    #murky_img_process = GateDetect(block_dim = 21)
 
     ##############
     # Video file #
     ##############
-    vid = cv2.VideoCapture('/home/xing/TesterCodes/OpenCV/GateProject/GateCcomp.mp4')
+    vid = cv2.VideoCapture('/home/xing/TesterCodes/OpenCV/GateProject/stand_still_far.avi')
     
     total_frames = 0
     time_used = []
@@ -186,14 +185,16 @@ if __name__ == '__main__':
             begin_time = time.perf_counter()
             HSVFrame1 = copy.deepcopy(HSVFrame)
 
-            whole_img_process = murky_img_process.wholeImgProcess(frame)
+            whole_img_process = ncsu_img_process.wholeImgProcess(frame)
             
             # murky (competition) pool config
-            mask1_img = murky_img_process.contourImg(frame)
-            # NCSU pool config
-            #mask1_img = img_process.maskImg(HSVFrame,50,0)
+            #mask1_img = murky_img_process.contourImg(frame)
+#            mask1_img = murky_img_process.maskImg(frame,color_thres=10)
 
-            gate_location = murky_img_process.findByMaximum(mask1_img)
+            # NCSU pool config
+            mask1_img = ncsu_img_process.maskImg(HSVFrame,50,0)
+
+            gate_location = ncsu_img_process.findByMaximum(mask1_img)
             print("--------------- ", gate_location)
             end_time = time.perf_counter()
             
@@ -203,7 +204,7 @@ if __name__ == '__main__':
             cv2.circle(mask1_img,(vert_center,hori_center),3,(255,0,0))
             cv2.imshow('mask1',mask1_img)
 
-            simple_img = murky_img_process.block2ImgByMaxVal()
+            simple_img = ncsu_img_process.block2ImgByMaxVal()
             cv2.imshow('simple_img',simple_img)
 
             plotter.clearfig()

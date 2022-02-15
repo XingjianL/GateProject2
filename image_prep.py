@@ -3,6 +3,7 @@ import numpy as np
 import random
 import time
 
+from image_util import ColorAssignment
 # This file provides some utilities needed to process an image
 # before labelling the features
 DEBUG_LOG = True
@@ -39,6 +40,7 @@ class ImagePrep:
     dist_thres_color_diff = 20.5    # 3d space distance for colors, higher/lower depending on visibility
 
     def __init__(self):
+        self.color_assignment = ColorAssignment()
         # slice - parameter defines how image should be sliced
         self.img_dim_slice = [210,210] # approximate dimension for image
         self.block_dim_slice = 21 # dimension for each square slices
@@ -186,6 +188,8 @@ class ImagePrep:
 
     # create the images
     def drawContour(self, img, contours, random_color = True):
+        color_list = self.color_assignment.generateColors(contours,img.shape)
+        print(color_list)
         if random_color is True:
             for i in range(len(contours)):
                 img = cv2.drawContours(img,contours,i,(255*random.random(),0,255*random.random()),1)

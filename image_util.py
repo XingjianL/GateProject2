@@ -50,7 +50,7 @@ class ColorAssignment:
     # channel 3 is used to represent the special locations
     #       strength is decided by location of contour
     #           in theory, all contour of gate should touch the edge of block
-    def generateColors(self,contour):
+    def generateColors(self, contours, image_shape):
         # receive all contours and the image size
         # returns corresponding colors
 
@@ -62,22 +62,37 @@ class ColorAssignment:
         # append the color
         # loop 
         # return colors
-        self.contourProperty(contour)
-        pass
-    def cleanEdgeSignal(self, contour, image_size):
+        noise = self.noiseMultiplier(contours,image_shape)
+        color_list = []
+        for contour in contours:
+            self.contourProperty(contour)
+            color = [0,noise,0]
+            color[0] = int(255 * self.cleanEdgeSignal(image_shape))
+            color[2] = int(255 * self.touchingBounds(contour,image_shape))
+            # if an edge is desired, it is probably not noise
+            # it could be noise otherwise
+            if (color[0] == 0):
+                color[1] = int(255 * noise)
+            print(color)
+            color_list.append(color)
+        return color_list
+    def cleanEdgeSignal(self, image_size):
         # find angle, bounding rectangle, area
-        # assign whether this contour is a clean edge
+        # assign whether this contour is a desired edge
         angle = abs(self.rot_rect[2]) % 90
         if (self.area < 5 and (angle < 20 or angle > 70)
-            and any(size >= image_size for size in self.up_rect[2:])):
-            return True
-        return False
+            and any(size >= image_size[0] for size in self.upright_rect[2:])):
+            return 1
+        return 0
 
-    def noiseMultiplier(contours, image_size):
+    def noiseMultiplier(self,contours, image_shape):
         # find # of contours, area of all contours in relation to image size
-        # 
+        # return sum of contoured / image size
+        zero_ground = np.zeros(image_shape,dtype="uint8")
+        contoured = cv2.drawContours(zero_ground,contours,-1,(1,1,1))
+        sum_contour = np.sum(contoured[:,:,0])
+        return sum_contour / image_shape[0]*image_shape[1]
 
-        pass
     def touchingBounds(self, contour, image_size):
         # find if the contour touches the image edge
         # contour_box is the bounding box (x,y,w,h)
@@ -85,8 +100,8 @@ class ColorAssignment:
         x,y,w,h = self.upright_rect
         if ((x == 0 or y == 0)
             or (x+w == image_size or y+h == image_size)):
-            return True
-        return False
+            return 1
+        return 0
 
     def contourProperty(self,contour):
         self.rot_rect = cv2.minAreaRect(contour)
