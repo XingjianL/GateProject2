@@ -7,7 +7,6 @@ import image_prep, image_util
 
 # class for all stuff related to Gate detection
 class GateDetect:
-    
     def __init__(self,
                 img_dim = None,
                 block_dim = None,
@@ -87,21 +86,19 @@ class GateDetect:
 if __name__ == '__main__':
     plotter = image_util.PlottingUtils()
     img_prep_m = image_prep.ImagePrep()
-    ncsu_img_process = GateDetect(block_dim = 21)
+    ncsu_img_process = GateDetect()
 
     ##############
     # Video file #
     ##############
     vid = cv2.VideoCapture('/home/xing/TesterCodes/OpenCV/GateProject/move_towards.avi')
-    
-    total_frames = 0
-    time_used = []
+
     while(vid.isOpened()):
         ret, frame = vid.read()
         if ret:
             cv2.imshow('original',frame)
-            HSVFrame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
+            HSVFrame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
             # NCSU pool config
             mask1_img = ncsu_img_process.maskImg(HSVFrame,50,0)
             

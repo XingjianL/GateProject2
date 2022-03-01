@@ -99,8 +99,7 @@ class ImagePrep:
         labels = labels.T
         return labels,colors
 
-    # true if colors are different, default compare the distance between colors
-    # all_values = False -> only compare the first value in color space, ie. hue for HSV
+    # true if colors are different, compare the distance between colors
     def compareColorDiff(self, colors, dist_threshold = dist_thres_color_diff):
         dist = np.linalg.norm(colors[0]-colors[1])
         if dist > dist_threshold:
