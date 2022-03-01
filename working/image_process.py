@@ -63,16 +63,21 @@ class GateDetect:
     # axis: 1 horizontal, 0 vertical
     def findByMaximum(self, img, axis):
         total_energy = self.sumOfAxis(img, axis = axis) # sum all pixels along an axis
-        sort_index = np.argsort(total_energy)        # sort the sum
-        check_index = np.flip(sort_index[-22:])      # filter the sorted array
+        sort_index = np.argsort(total_energy)        # sort the pixel index by sum
+        check_index = np.flip(sort_index[-22:])      # filter the sorted pixel index array
         
+        max_filter = 7500
         width_filter = 10   # pixel gap between peaks
         center = -1
         saved_i = check_index[0]
+
+        if max(total_energy) < max_filter:
+            return center           # no valid peaks
         if axis == 0:               # 2 vertical peaks
             for i in check_index:
                 if(abs(i-saved_i) > width_filter):
-                    center = (i + saved_i)/2
+                    center = (i + saved_i)/2    # middle
+                    center = (center + min([i,saved_i])) / 2 # middle of the left part
                     break
         else:                       # 1 horizontal peak + offset
             center = check_index[0] + 20
@@ -106,6 +111,10 @@ if __name__ == '__main__':
             # the height location is not reliable
             gate_location = (ncsu_img_process.findByMaximum(mask1_img,0),
                             ncsu_img_process.findByMaximum(mask1_img,1))
+            if any(gate_location) < 0:
+                valid_location = False
+            else:
+                valid_location = True
             # image center
             vert_center = int(mask1_img.shape[1] / 2)
             hori_center = int(mask1_img.shape[0] / 2)
@@ -114,8 +123,12 @@ if __name__ == '__main__':
             # blue circle: image center
             # green circle: gate location
             # red circle: x: gate location, y: image center
-            cv2.circle(mask1_img,gate_location,5,(0,255,0))
-            cv2.circle(mask1_img,(gate_location[0],hori_center),5,(0,0,255))
+            if valid_location:
+                #################################
+                # send the location to robot here
+                #################################
+                cv2.circle(mask1_img,gate_location,5,(0,255,0))
+                cv2.circle(mask1_img,(gate_location[0],hori_center),5,(0,0,255))
             cv2.circle(mask1_img,(vert_center,hori_center),3,(255,0,0))
             cv2.imshow('mask1',mask1_img)
             plotter.clearfig()
